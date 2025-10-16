@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Status da Biblioteca</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            background-color: silver;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            height: 100vh;
+        }
+
+        .sala {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .linha-vertical {
+            width: 2px;
+            background-color: black;
+        }
+
+        img {
+            max-width: 100%;
+            width: 80%;
+            height: auto;
+            border: 1px solid #333;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .sala h2 {
+            text-align: center;
+        }
+
+        .estado {
+            margin-top: 20px;
+        }
+
+        .estado p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Status da Biblioteca</h1>
+
+    <div class="container">
+        <!-- Sala 1 -->
+        <div class="sala" id="sala1">
+            <h2>Sala 1</h2>
+            <img id="img-sala1" src="/static/sala1_imagem1.png" alt="Sala 1">
+            <div class="estado">
+                <p><strong>Ar-condicionado:</strong> <span id="ar-sala1">---</span></p>
+                <p><strong>Luz:</strong> <span id="luz-sala1">---</span></p>
+                <p><strong>Temperatura:</strong> <span id="temp-sala1">---</span></p>
+                <p><strong>Umidade:</strong> <span id="umid-sala1">---</span></p>
+                <p><strong>Presenca:</strong> <span id="presenca-sala1">---</span></p>
+                <p><strong>Porta:</strong> <span id="porta-sala1">---</span></p>
+            </div>
+        </div>
+
+        <!-- Linha vertical -->
+        <div class="linha-vertical"></div>
+
+        <!-- Sala 2 -->
+        <div class="sala" id="sala2">
+            <h2>Sala 2</h2>
+            <img id="img-sala2" src="/static/sala2_imagem1.png" alt="Sala 2">
+            <div class="estado">
+                <p><strong>Ar-condicionado:</strong> <span id="ar-sala2">---</span></p>
+                <p><strong>Luz:</strong> <span id="luz-sala2">---</span></p>
+                <p><strong>Temperatura:</strong> <span id="temp-sala2">---</span></p>
+                <p><strong>Umidade:</strong> <span id="umid-sala2">---</span></p>
+                <p><strong>Presenca:</strong> <span id="presenca-sala2">---</span></p>
+                <p><strong>Porta:</strong> <span id="porta-sala2">---</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var socket = io();
+
+        socket.on('mqtt_message', function(data) {
+            console.log(" �¡ Dados recebidos:", data);
+
+            const sala = data.sala; // ex: "sala1" ou "sala2"
+            const topic = data.topic;
+            const payload = JSON.parse(data.payload);
+
+            // Atualiza imagem
+            if (data.imagem) {
+                const imgId = "img-" + sala;
+                document.getElementById(imgId).src = "/static/" + data.imagem;
+            }
+
+            // Atualiza dados com base no subtopico
+            if (topic.includes("/comando/ar-cond")) {
+                document.getElementById("ar-" + sala).textContent = payload.comando;
+            } else if (topic.includes("/luz")) {
+                document.getElementById("luz-" + sala).textContent = payload.comando;
+            } else if (topic.includes("/temperatura")) {
+                document.getElementById("temp-" + sala).textContent = payload.temperatura + " ºC";
+            } else if (topic.includes("/umidade")) {
+                document.getElementById("umid-" + sala).textContent = payload.umidade + " %";
+            } else if (topic.includes("/presenca")) {
+                document.getElementById("presenca-" + sala).textContent = payload.presenca ? "detectada" : "ausente";
+            } else if (topic.includes("/porta/entrada")) {
+                document.getElementById("porta-" + sala).textContent = payload.comando;
+            }
+        });
+    </script>
+</body>
+</html>
